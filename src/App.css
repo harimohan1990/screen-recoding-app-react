@@ -1,109 +1,81 @@
+:root {
+  --bg-light: #f9f9f9;
+  --text-light: #333;
+  --bg-dark: #121212;
+  --text-dark: #f1f1f1;
+}
 
 body {
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
-  background-color: #f3f4f6;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-light);
+  transition: all 0.3s ease;
 }
 
 .container {
-  padding: 40px 20px;
+  max-width: 800px;
+  margin: auto;
+  padding: 2rem;
   text-align: center;
-  min-height: 100vh;
-  background-color: #f3f4f6;
+  transition: background 0.3s, color 0.3s;
+}
+
+.container.dark {
+  background-color: var(--bg-dark);
+  color: var(--text-dark);
 }
 
 .title {
   font-size: 2rem;
   font-weight: bold;
-  color: #1f2937;
-  margin-bottom: 30px;
+  margin-bottom: 1rem;
 }
 
 .error-message {
-  color: #dc2626;
-  margin-bottom: 16px;
-  font-weight: bold;
+  color: red;
+  margin-bottom: 1rem;
 }
 
-.button-group {
-  margin-bottom: 24px;
+.toggle-dark {
+  margin-bottom: 1rem;
 }
 
-button {
-  padding: 10px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 8px;
-  margin: 0 8px 10px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  color: #fff;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Colors */
-.start-btn {
-  background-color: #16a34a;
-}
-
-.start-btn:hover {
-  background-color: #15803d;
-}
-
-.stop-btn {
-  background-color: #dc2626;
-}
-
-.stop-btn:hover {
-  background-color: #b91c1c;
-}
-
-.play-btn {
-  background-color: #2563eb;
-}
-
-.play-btn:hover {
-  background-color: #1d4ed8;
-}
-
-.pause-btn {
-  background-color: #f59e0b;
-}
-
-.pause-btn:hover {
-  background-color: #d97706;
-}
-
-.download-btn {
-  background-color: #9333ea;
-}
-
-.download-btn:hover {
-  background-color: #7e22ce;
+.options,
+.button-group,
+.controls {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .timer {
-  font-family: monospace;
-  font-size: 18px;
-  color: #374151;
-  display: inline-block;
-  margin-left: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 
-video {
-  display: block;
-  margin: 0 auto;
-  max-width: 900px;
-  border: 2px solid #ccc;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.start-btn, .stop-btn, .play-btn, .pause-btn, .download-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
-.controls {
-  margin-top: 24px;
+.start-btn { background-color: #4CAF50; }
+.stop-btn { background-color: #f44336; }
+.play-btn { background-color: #2196F3; }
+.pause-btn { background-color: #FFC107; color: black; }
+.download-btn { background-color: #9C27B0; }
+
+.video {
+  margin-top: 1.5rem;
+  width: 100%;
+  max-height: 400px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }

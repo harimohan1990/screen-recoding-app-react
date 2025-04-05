@@ -10,31 +10,57 @@ const ScreenRecorder = () => {
   const [recordingTime, setRecordingTime] = useState(0);
   const [timerInterval, setTimerInterval] = useState(null);
   const [error, setError] = useState('');
+  const [includeMic, setIncludeMic] = useState(true);
+  const [includeWebcam, setIncludeWebcam] = useState(false);
+  const [webcamStream, setWebcamStream] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     return () => {
       if (timerInterval) clearInterval(timerInterval);
       if (stream) stream.getTracks().forEach(track => track.stop());
+      if (webcamStream) webcamStream.getTracks().forEach(track => track.stop());
     };
-  }, [stream, timerInterval]);
+  }, [stream, timerInterval, webcamStream]);
 
   const handleStartRecording = async () => {
     try {
       setError('');
-      const captureStream = await navigator.mediaDevices.getDisplayMedia({
-        video: { mediaSource: 'screen' },
-        audio: true,
+      setRecordedUrl(null);
+      setRecordingTime(0);
+
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: includeMic,
       });
 
+      let finalStream = displayStream;
+
+      if (includeWebcam) {
+        const webcam = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+        setWebcamStream(webcam);
+
+        const combinedTracks = [
+          ...displayStream.getVideoTracks(),
+          ...webcam.getVideoTracks(),
+          ...(includeMic ? displayStream.getAudioTracks() : []),
+        ];
+
+        finalStream = new MediaStream(combinedTracks);
+      }
+
       if (videoRef.current) {
-        videoRef.current.srcObject = captureStream;
+        videoRef.current.srcObject = finalStream;
       }
 
       const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
         ? 'video/webm;codecs=vp9'
         : 'video/webm';
 
-      const mediaRecorder = new MediaRecorder(captureStream, { mimeType });
+      const mediaRecorder = new MediaRecorder(finalStream, { mimeType });
       const chunks = [];
 
       mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
@@ -53,41 +79,34 @@ const ScreenRecorder = () => {
       mediaRecorder.start();
       mediaRecorderRef.current = mediaRecorder;
       setRecording(true);
-      setStream(captureStream);
+      setStream(finalStream);
 
       const interval = setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
       setTimerInterval(interval);
     } catch (err) {
-      console.error('Error: ' + err);
-      setError('Failed to start recording. Please allow screen sharing and microphone access.');
+      console.error('Error:', err);
+      setError('Failed to start recording. Please allow screen and microphone access.');
     }
   };
 
   const handleStopRecording = () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      setRecording(false);
+    if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    if (webcamStream) {
+      webcamStream.getTracks().forEach(track => track.stop());
+      setWebcamStream(null);
     }
-
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-    }
-
     if (timerInterval) {
       clearInterval(timerInterval);
       setTimerInterval(null);
     }
+    setRecording(false);
   };
 
-  const handlePlay = () => {
-    videoRef.current?.play();
-  };
-
-  const handlePause = () => {
-    videoRef.current?.pause();
-  };
+  const handlePlay = () => videoRef.current?.play();
+  const handlePause = () => videoRef.current?.pause();
 
   const handleDownload = () => {
     if (recordedUrl) {
@@ -109,32 +128,44 @@ const ScreenRecorder = () => {
   };
 
   return (
-    <div className="container">
-      <h1 className="title">React Screen Recorder</h1>
+    <div className={`container ${darkMode ? 'dark' : ''}`}>
+      <h1 className="title">🎥 React Screen Recorder</h1>
+
+      <div className="toggle-dark">
+        <label>
+          <input
+            type="checkbox"
+            checked={darkMode}
+            onChange={() => setDarkMode(!darkMode)}
+          />
+          {darkMode ? '🌙 Dark Mode' : '☀️ Light Mode'}
+        </label>
+      </div>
 
       {error && <p className="error-message">{error}</p>}
 
-      <div className="button-group">
-        <button
-          onClick={handleStartRecording}
-          disabled={recording}
-          className="start-btn"
-        >
-          🎬 Start Recording
-        </button>
-        <button
-          onClick={handleStopRecording}
-          disabled={!recording}
-          className="stop-btn"
-        >
-          🛑 Stop Recording
-        </button>
-        {recording && (
-          <span className="timer">⏱ {formatTime(recordingTime)}</span>
-        )}
+      <div className="options">
+        <label>
+          <input type="checkbox" checked={includeMic} onChange={() => setIncludeMic(!includeMic)} />
+          🎤 Include Microphone
+        </label>
+        <label>
+          <input type="checkbox" checked={includeWebcam} onChange={() => setIncludeWebcam(!includeWebcam)} />
+          📷 Include Webcam
+        </label>
       </div>
 
-      <video ref={videoRef} autoPlay controls muted />
+      <div className="button-group">
+        <button onClick={handleStartRecording} disabled={recording} className="start-btn">
+          ⏺ Start Recording
+        </button>
+        <button onClick={handleStopRecording} disabled={!recording} className="stop-btn">
+          ⏹ Stop Recording
+        </button>
+        {recording && <span className="timer">⏱ {formatTime(recordingTime)}</span>}
+      </div>
+
+      <video ref={videoRef} autoPlay controls muted className="video" />
 
       {recordedUrl && (
         <div className="controls">
