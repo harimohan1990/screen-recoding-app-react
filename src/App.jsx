@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import './App.css';
 
 const ScreenRecorder = () => {
   const videoRef = useRef(null);
@@ -108,59 +109,38 @@ const ScreenRecorder = () => {
   };
 
   return (
-    <div className="p-6 text-center bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">React Screen Recorder</h1>
+    <div className="container">
+      <h1 className="title">React Screen Recorder</h1>
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
+      {error && <p className="error-message">{error}</p>}
 
-      <div className="space-x-4 mb-6">
+      <div className="button-group">
         <button
           onClick={handleStartRecording}
           disabled={recording}
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded disabled:opacity-50"
+          className="start-btn"
         >
           🎬 Start Recording
         </button>
         <button
           onClick={handleStopRecording}
           disabled={!recording}
-          className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded disabled:opacity-50"
+          className="stop-btn"
         >
           🛑 Stop Recording
         </button>
         {recording && (
-          <span className="text-lg font-mono text-gray-700">⏱ {formatTime(recordingTime)}</span>
+          <span className="timer">⏱ {formatTime(recordingTime)}</span>
         )}
       </div>
 
-      <video
-        ref={videoRef}
-        autoPlay
-        controls
-        muted
-        className="mx-auto max-w-4xl border rounded-lg shadow"
-      />
+      <video ref={videoRef} autoPlay controls muted />
 
       {recordedUrl && (
-        <div className="mt-6 space-x-4">
-          <button
-            onClick={handlePlay}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-          >
-            ▶️ Play
-          </button>
-          <button
-            onClick={handlePause}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded"
-          >
-            ⏸ Pause
-          </button>
-          <button
-            onClick={handleDownload}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
-          >
-            📥 Download
-          </button>
+        <div className="controls">
+          <button onClick={handlePlay} className="play-btn">▶️ Play</button>
+          <button onClick={handlePause} className="pause-btn">⏸ Pause</button>
+          <button onClick={handleDownload} className="download-btn">📥 Download</button>
         </div>
       )}
     </div>
