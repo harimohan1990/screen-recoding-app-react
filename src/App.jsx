@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 const ScreenRecorder = () => {
   const videoRef = useRef(null);
@@ -6,9 +6,20 @@ const ScreenRecorder = () => {
   const [recording, setRecording] = useState(false);
   const [recordedUrl, setRecordedUrl] = useState(null);
   const [stream, setStream] = useState(null);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [timerInterval, setTimerInterval] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    return () => {
+      if (timerInterval) clearInterval(timerInterval);
+      if (stream) stream.getTracks().forEach(track => track.stop());
+    };
+  }, [stream, timerInterval]);
 
   const handleStartRecording = async () => {
     try {
+      setError('');
       const captureStream = await navigator.mediaDevices.getDisplayMedia({
         video: { mediaSource: 'screen' },
         audio: true,
@@ -42,8 +53,14 @@ const ScreenRecorder = () => {
       mediaRecorderRef.current = mediaRecorder;
       setRecording(true);
       setStream(captureStream);
+
+      const interval = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      setTimerInterval(interval);
     } catch (err) {
       console.error('Error: ' + err);
+      setError('Failed to start recording. Please allow screen sharing and microphone access.');
     }
   };
 
@@ -55,6 +72,11 @@ const ScreenRecorder = () => {
 
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
+    }
+
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      setTimerInterval(null);
     }
   };
 
@@ -75,13 +97,21 @@ const ScreenRecorder = () => {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(recordedUrl); // free memory
+      URL.revokeObjectURL(recordedUrl);
     }
+  };
+
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
     <div className="p-6 text-center bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">React Screen Recorder</h1>
+
+      {error && <p className="text-red-600 mb-4">{error}</p>}
 
       <div className="space-x-4 mb-6">
         <button
@@ -98,6 +128,9 @@ const ScreenRecorder = () => {
         >
           🛑 Stop Recording
         </button>
+        {recording && (
+          <span className="text-lg font-mono text-gray-700">⏱ {formatTime(recordingTime)}</span>
+        )}
       </div>
 
       <video
