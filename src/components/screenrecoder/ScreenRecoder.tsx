@@ -1,25 +1,26 @@
 import React, { useRef, useState, useEffect } from 'react';
-import './App.css';
+import '../../App.css';
 
-const ScreenRecorder = () => {
-  const videoRef = useRef(null);
-  const mediaRecorderRef = useRef(null);
-  const [recording, setRecording] = useState(false);
-  const [recordedUrl, setRecordedUrl] = useState(null);
-  const [stream, setStream] = useState(null);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [timerInterval, setTimerInterval] = useState(null);
-  const [error, setError] = useState('');
-  const [includeMic, setIncludeMic] = useState(true);
-  const [includeWebcam, setIncludeWebcam] = useState(false);
-  const [webcamStream, setWebcamStream] = useState(null);
-  const [darkMode, setDarkMode] = useState(false);
+const ScreenRecorder: React.FC = () => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+
+  const [recording, setRecording] = useState<boolean>(false);
+  const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [recordingTime, setRecordingTime] = useState<number>(0);
+  const [timerInterval, setTimerInterval] = useState< null>(null);
+  const [error, setError] = useState<string>('');
+  const [includeMic, setIncludeMic] = useState<boolean>(true);
+  const [includeWebcam, setIncludeWebcam] = useState<boolean>(false);
+  const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
 
   useEffect(() => {
     return () => {
       if (timerInterval) clearInterval(timerInterval);
-      if (stream) stream.getTracks().forEach(track => track.stop());
-      if (webcamStream) webcamStream.getTracks().forEach(track => track.stop());
+      stream?.getTracks().forEach(track => track.stop());
+      webcamStream?.getTracks().forEach(track => track.stop());
     };
   }, [stream, timerInterval, webcamStream]);
 
@@ -61,9 +62,11 @@ const ScreenRecorder = () => {
         : 'video/webm';
 
       const mediaRecorder = new MediaRecorder(finalStream, { mimeType });
-      const chunks = [];
+      const chunks: Blob[] = [];
 
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      mediaRecorder.ondataavailable = (e: BlobEvent) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
 
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: mimeType });
@@ -81,7 +84,7 @@ const ScreenRecorder = () => {
       setRecording(true);
       setStream(finalStream);
 
-      const interval = setInterval(() => {
+      const interval:any= setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
       setTimerInterval(interval);
@@ -92,21 +95,29 @@ const ScreenRecorder = () => {
   };
 
   const handleStopRecording = () => {
-    if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
-    if (stream) stream.getTracks().forEach(track => track.stop());
+    mediaRecorderRef.current?.stop();
+    stream?.getTracks().forEach(track => track.stop());
+
     if (webcamStream) {
       webcamStream.getTracks().forEach(track => track.stop());
       setWebcamStream(null);
     }
+
     if (timerInterval) {
       clearInterval(timerInterval);
       setTimerInterval(null);
     }
+
     setRecording(false);
   };
 
-  const handlePlay = () => videoRef.current?.play();
-  const handlePause = () => videoRef.current?.pause();
+  const handlePlay = () => {
+    videoRef.current?.play();
+  };
+
+  const handlePause = () => {
+    videoRef.current?.pause();
+  };
 
   const handleDownload = () => {
     if (recordedUrl) {
@@ -121,7 +132,7 @@ const ScreenRecorder = () => {
     }
   };
 
-  const formatTime = (time) => {
+  const formatTime = (time: number): string => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -146,11 +157,19 @@ const ScreenRecorder = () => {
 
       <div className="options">
         <label>
-          <input type="checkbox" checked={includeMic} onChange={() => setIncludeMic(!includeMic)} />
+          <input
+            type="checkbox"
+            checked={includeMic}
+            onChange={() => setIncludeMic(!includeMic)}
+          />
           🎤 Include Microphone
         </label>
         <label>
-          <input type="checkbox" checked={includeWebcam} onChange={() => setIncludeWebcam(!includeWebcam)} />
+          <input
+            type="checkbox"
+            checked={includeWebcam}
+            onChange={() => setIncludeWebcam(!includeWebcam)}
+          />
           📷 Include Webcam
         </label>
       </div>
